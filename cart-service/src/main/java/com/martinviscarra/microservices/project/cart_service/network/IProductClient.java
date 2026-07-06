@@ -1,4 +1,4 @@
-package com.martinviscarra.microservices.project.cart_service.repository;
+package com.martinviscarra.microservices.project.cart_service.network;
 
 import com.martinviscarra.microservices.project.cart_service.dto.product.ProductResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "product-service")
+@FeignClient(name = "product-service", configuration = FeignClientConfig.class)
 public interface IProductClient {
 
     @GetMapping("/api/products/batch")

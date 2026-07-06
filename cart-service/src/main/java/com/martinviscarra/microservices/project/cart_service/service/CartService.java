@@ -10,10 +10,9 @@ import com.martinviscarra.microservices.project.cart_service.dto.product.Product
 import com.martinviscarra.microservices.project.cart_service.exception.BusinessRuleException;
 import com.martinviscarra.microservices.project.cart_service.model.Cart;
 import com.martinviscarra.microservices.project.cart_service.model.CartItem;
+import com.martinviscarra.microservices.project.cart_service.network.ProductClient;
 import com.martinviscarra.microservices.project.cart_service.repository.ICartRepository;
-import com.martinviscarra.microservices.project.cart_service.repository.IProductClient;
 import com.martinviscarra.microservices.project.cart_service.utils.CartStatus;
-import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ import java.util.stream.Collectors;
 public class CartService implements ICartService {
 
     private final ICartRepository cartRepository;
-    private final IProductClient productClient;
+    private final ProductClient productClient;
 
 
     //-------------------------------------------------Save
@@ -42,7 +41,7 @@ public class CartService implements ICartService {
         List<Long> ids = getListIds(request);
 
         // Obtenemos la lista de productos para validar su existencia
-        List<ProductResponseDto> products = getProductsByIds(ids);
+        getProductsByIds(ids);
 
         Cart cart = createCart(request);
 
@@ -90,6 +89,7 @@ public class CartService implements ICartService {
         return cartItems;
     }
 
+
     private List<ProductResponseDto> getProductsByIds(List<Long> ids) {
         List<ProductResponseDto> products = productClient.getProductsByIds(ids);
 
@@ -131,8 +131,8 @@ public class CartService implements ICartService {
     private Cart findCartAndVerifyStatus(Long id, CartStatus cartStatus) {
         Cart cart = findCart(id);
 
-        if(cart.getStatus() != cartStatus){
-            throw new BusinessRuleException("La accion no puede concretarse porque el estado del carrito es "+cartStatus);
+        if (cart.getStatus() != cartStatus) {
+            throw new BusinessRuleException("La accion no puede concretarse porque el estado del carrito es " + cartStatus);
         }
 
         return cart;
@@ -145,24 +145,20 @@ public class CartService implements ICartService {
     }
 
     private ProductResponseDto getProductById(Long productId) {
-        try {
-            ProductResponseDto p = productClient.getProductById(productId);
-            if (!p.isActive()) {
-                throw new BusinessRuleException("El producto '" + p.getName() + "' se encuentra inactivo.");
-            }
-            return p;
-        } catch (FeignException.NotFound e) {
-            throw new BusinessRuleException("El producto con ID " + productId + " no existe en el catalogo.");
+        ProductResponseDto p = productClient.getProductById(productId);
+        if (!p.isActive()) {
+            throw new BusinessRuleException("El producto '" + p.getName() + "' se encuentra inactivo.");
         }
+        return p;
     }
 
     private CartItem modifyItemQuantityOrSave(Cart cart, CartItem cartItem, ItemRequestDto request) {
-        if(cartItem != null){
+        if (cartItem != null) {
             //El item ya estaba relacionado al carrito, aumentamos la cantidad
             cartItem.setQuantity(request.getQuantity());
             return cartItem;
 
-        } else{
+        } else {
             //El item no estaba relacionado al carrito, lo agregamos
             CartItem cartItemToSave = CartItem.builder()
                     .cart(cart)
@@ -175,7 +171,7 @@ public class CartService implements ICartService {
         }
     }
 
-    private CartItem findItemFromCart(Cart cart, Long productId){
+    private CartItem findItemFromCart(Cart cart, Long productId) {
         return cart.getItems()
                 .stream()
                 .filter(item -> item.getProductId().equals(productId))
@@ -195,7 +191,7 @@ public class CartService implements ICartService {
         cartRepository.save(cart); // Llamada explícita por legibilidad del código; la sincronización real la maneja el dirty-checking de JPA
     }
 
-    public void removeItemFromList(List<CartItem> items, Long productId){
+    public void removeItemFromList(List<CartItem> items, Long productId) {
         boolean wasRemoved = items.removeIf(item -> item.getProductId().equals(productId));
 
         if (!wasRemoved) {
@@ -244,7 +240,7 @@ public class CartService implements ICartService {
         Map<Long, ProductResponseDto> productMap = getProductMap(products);
         List<ItemDetailDto> itemsDetailsDto = new ArrayList<>();
 
-        for(CartItem item : items){
+        for (CartItem item : items) {
 
             // Obtenemos el producto referenciado por el item
             ProductResponseDto product = productMap.get(item.getProductId());
