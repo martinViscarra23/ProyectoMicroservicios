@@ -6,6 +6,7 @@ import com.martinviscarra.microservices.project.cart_service.exception.ServiceUn
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,8 @@ public class ProductClient {
 
     private final IProductClient productClient;
 
-    @CircuitBreaker(name = "product-service", fallbackMethod = "fallbackGetProductsByIds")
+    @Retry(name = "product-service", fallbackMethod = "fallbackGetProductsByIds")
+    @CircuitBreaker(name = "product-service")
     public List<ProductResponseDto> getProductsByIds(List<Long> ids) {
         return productClient.getProductsByIds(ids);
     }
@@ -34,7 +36,9 @@ public class ProductClient {
         throw new ServiceUnavailableException("El catálogo de productos está temporalmente fuera de servicio. No podemos procesar su carrito en este momento.");
     }
 
-    @CircuitBreaker(name = "product-service", fallbackMethod = "fallbackGetProductById")
+
+    @Retry(name = "product-service", fallbackMethod = "fallbackGetProductById")
+    @CircuitBreaker(name = "product-service")
     public ProductResponseDto getProductById(Long id) {
         return productClient.getProductById(id);
     }
