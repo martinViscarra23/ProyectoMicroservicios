@@ -7,17 +7,14 @@ import com.martinviscarra.microservices.project.sale_service.dto.sale.SaleRespon
 import com.martinviscarra.microservices.project.sale_service.exception.BusinessRuleException;
 import com.martinviscarra.microservices.project.sale_service.model.Sale;
 import com.martinviscarra.microservices.project.sale_service.model.SaleItem;
-import com.martinviscarra.microservices.project.sale_service.repository.ICartClient;
+import com.martinviscarra.microservices.project.sale_service.network.CartClient;
 import com.martinviscarra.microservices.project.sale_service.repository.ISaleRepository;
 import com.martinviscarra.microservices.project.sale_service.utils.SaleStatus;
-import feign.FeignException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,7 +22,7 @@ import java.util.List;
 public class SaleService implements ISaleService {
 
     private final ISaleRepository saleRepository;
-    private final ICartClient cartClient;
+    private final CartClient cartClient;
 
     //---------------------------------------------------SAVE
     @Transactional
@@ -90,12 +87,12 @@ public class SaleService implements ISaleService {
     }
 
     private CartDetailDto findCartById(Long cartId) {
-        try {
-            return cartClient.getCartById(cartId);
-        } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("No existe el carrito con id: " + cartId);
-        }
-
+//        try {
+//            return cartClient.getCartById(cartId);
+//        } catch (FeignException.NotFound e) {
+//            throw new EntityNotFoundException("No existe el carrito con id: " + cartId);
+//        }
+        return cartClient.getCartById(cartId);
     }
 
 }
