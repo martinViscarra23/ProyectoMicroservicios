@@ -4,6 +4,7 @@ import com.martinviscarra.microservices.project.product_service.dto.ProductDto;
 import com.martinviscarra.microservices.project.product_service.dto.ProductRequestDto;
 import com.martinviscarra.microservices.project.product_service.service.IProductService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +20,6 @@ import java.util.List;
 public class ProductController {
 
     private final IProductService productService;
-
-    @Value("${server.port}")
-    private int serverPort;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -49,20 +47,18 @@ public class ProductController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductDto getById(@PathVariable Long id) {
+    public ProductDto getById(@PathVariable Long id, HttpServletRequest request, HttpServletResponse response) {
+        // Enviamos el puerto real de la instancia en los headers
+        response.setHeader("X-Instance-Port", String.valueOf(request.getLocalPort()));
         return productService.getById(id);
     }
 
     @GetMapping("/batch")
     @ResponseStatus(HttpStatus.OK)
-    public List<ProductDto> getProductsByIds(@RequestParam("ids") List<Long> ids, HttpServletRequest request) {
-
-        List<ProductDto> response = productService.getProductsByIds(ids);
-
-        // request.getLocalPort() consulta el número de puerto real que está usando esta instancia
-        System.out.println("----- Datos de productos servidos desde la instancia con puerto " + request.getLocalPort() + " -----");
-
-        return response;
+    public List<ProductDto> getProductsByIds(@RequestParam("ids") List<Long> ids, HttpServletRequest request, HttpServletResponse response) {
+        // Enviamos el puerto real de la instancia en los headers
+        response.setHeader("X-Instance-Port", String.valueOf(request.getLocalPort()));
+        return productService.getProductsByIds(ids);
     }
 
 }

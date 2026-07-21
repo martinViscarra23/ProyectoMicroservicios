@@ -12,13 +12,13 @@ spring:
         webflux:
           discovery:
             locator:
-              enabled: false # Apagamos la exposición automática
+              enabled: false # Apagamos la exposicion automatica
           routes:
             # --- RUTA DE PRODUCTOS ---
             - id: product-service-route
-              uri: lb://PRODUCT-SERVICE # lb:// significa "Load Balancer" (búscalo en Eureka)
+              uri: lb://PRODUCT-SERVICE # lb:// significa "Load Balancer" (buscalo en Eureka)
               predicates:
-                - Path=/api/products/** # Si la URL entrante empieza con esto, entra aqu
+                - Path=/api/products/** # Si la URL entrante empieza con esto, entra aqui
 
             # --- RUTA DE CAARRITOS ---
             - id: cart-service-route
@@ -43,9 +43,9 @@ management:
 
       # http://localhost:443/actuator/gateway/routes para ver las metricas
 
-# Configuración de Eureka
+# Configuracion de Eureka
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka
 

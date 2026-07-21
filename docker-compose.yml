@@ -1,0 +1,95 @@
+services:
+  mysql-server:
+    image: mysql:8.0
+    container_name: mysql-server
+    mem_limit: 512m
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Mapeamos el script para que cree las 3 bases de datos automaticamente al nacer
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - 'docker-network'
+    # Docker revisara cada 5 segundos si MySQL ya esta listo
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  eureka-server:
+    build: eureka-server
+    mem_limit: 512m
+    ports:
+      - "8761:8761"
+    networks:
+      - 'docker-network'
+      
+  product-service:
+    build: product-service
+    mem_limit: 512m
+    environment:
+      EUREKA_HOST: eureka-server     
+      DB_HOST: mysql-server          
+      SS_USERNAME: root
+      SS_PASSWORD: root
+    networks:
+      - 'docker-network'
+    depends_on:
+      mysql-server:
+        condition: service_healthy # Solo arranca si el healthcheck de MySQL dio verde
+      eureka-server:
+        condition: service_started
+      
+  cart-service:
+    build: cart-service
+    mem_limit: 512m
+    environment:
+      EUREKA_HOST: eureka-server
+      DB_HOST: mysql-server
+      SS_USERNAME: root
+      SS_PASSWORD: root
+    networks:
+      - 'docker-network'
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      
+  sale-service:
+    build: sale-service
+    mem_limit: 512m
+    environment:
+      EUREKA_HOST: eureka-server
+      DB_HOST: mysql-server
+      SS_USERNAME: root
+      SS_PASSWORD: root
+    networks:
+      - 'docker-network'
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      
+  api-gateway:
+    build: api-gateway
+    mem_limit: 512m
+    ports:
+      - "443:443"
+    environment:
+      EUREKA_HOST: eureka-server     
+    networks:
+      - 'docker-network'
+    depends_on:
+      - eureka-server
+      
+networks:
+  docker-network:
+
+volumes:
+  mysql_data:
