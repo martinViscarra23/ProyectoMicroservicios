@@ -51,37 +51,48 @@ El modelado de datos y negocio respeta límites estrictos de responsabilidad y n
 
 ---
 
-# 🚀 Ejecución
+## 🚀 Ejecución
 
-El proyecto puede ejecutarse completamente utilizando únicamente Docker y Git. No es necesario instalar MySQL ni configurar dependencias adicionales.
+El proyecto está preparado para desplegarse fácilmente mediante Docker. No es necesario instalar MySQL ni configurar una base de datos local, aunque sí es necesario compilar previamente los microservicios para generar sus archivos `.jar`.
 
-## 1. Clonar el repositorio
+### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/martinViscarra23/ProyectoMicroservicios.git
-
 cd ProyectoMicroservicios
 ```
 
-## 2. Levantar toda la infraestructura (Docker)
+### 2. Generar los archivos `.jar`
+
+Antes de construir las imágenes de Docker, es necesario compilar el código fuente para generar los `.jar` correspondientes a los cinco servicios del proyecto:
+
+- `api-gateway`
+- `eureka-server`
+- `product-service`
+- `cart-service`
+- `sale-service`
+
+Puedes hacerlo desde tu IDE (IntelliJ IDEA, Eclipse o VS Code) utilizando el ciclo de vida de Maven (`clean` + `package` o `install`), o desde la terminal ejecutando:
+
+```bash
+mvn clean package -DskipTests
+```
+
+> **Nota:** Si ejecutas el comando desde la raíz del proyecto, asegúrate de que el proyecto esté configurado como un proyecto Maven multi-módulo. En caso contrario, deberás ejecutar el comando dentro de cada uno de los cinco microservicios.
+
+### 3. Levantar toda la infraestructura
+
+Una vez generados los archivos `.jar`, inicia toda la infraestructura con Docker Compose:
 
 ```bash
 docker compose up --build -d
 ```
-Espere unos segundos y podrá ver en el panel de Eureka (`http://localhost:8761`) todos los microservicios registrados automáticamente.
 
+Después de unos segundos, podrás acceder al panel de Eureka y verificar que todos los microservicios se hayan registrado correctamente:
 
-## 📈 Escalado Horizontal (Opcional)
-
-Para comprobar el balanceo de carga, puede iniciarse múltiples instancias del Product Service.
-
-```bash
-docker compose up --build -d \
---scale product-service=3 \
---no-recreate
 ```
-
-En el panel de Eureka (`http://localhost:8761`) podrá observar cómo las tres instancias son registradas automáticamente.
+http://localhost:8761
+```
 
 ---
 
