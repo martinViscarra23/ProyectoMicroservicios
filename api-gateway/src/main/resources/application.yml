@@ -8,29 +8,58 @@ spring:
     web-application-type: reactive
   cloud:
     gateway:
-      server:
-        webflux:
-          discovery:
-            locator:
-              enabled: false # Apagamos la exposicion automatica
-          routes:
-            # --- RUTA DE PRODUCTOS ---
-            - id: product-service-route
-              uri: lb://PRODUCT-SERVICE # lb:// significa "Load Balancer" (buscalo en Eureka)
-              predicates:
-                - Path=/api/products/** # Si la URL entrante empieza con esto, entra aqui
+      discovery:
+        locator:
+          enabled: false # Apagamos la exposicion automatica
+      routes:
+        # RUTAS DE NEGOCIO (MICROSERVICIOS)
+        - id: product-service-route
+          uri: lb://PRODUCT-SERVICE # lb:// significa "Load Balancer" (buscalo en Eureka)
+          predicates:
+            - Path=/api/products/** # Si la URL entrante empieza con esto, entra aqui
 
-            # --- RUTA DE CAARRITOS ---
-            - id: cart-service-route
-              uri: lb://CART-SERVICE
-              predicates:
-                - Path=/api/carts/**
+        - id: cart-service-route
+          uri: lb://CART-SERVICE
+          predicates:
+            - Path=/api/carts/**
 
-           # --- RUTA DE VENTAS ---
-            - id: sale-service-route
-              uri: lb://SALE-SERVICE
-              predicates:
-                - Path=/api/sales/**
+        - id: sale-service-route
+          uri: lb://SALE-SERVICE
+          predicates:
+            - Path=/api/sales/**
+
+        # RUTAS DE SOPORTE PARA SWAGGER UI
+        - id: openapi-products
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/doc-products/**
+          filters:
+            - StripPrefix=1 # Recorta "/doc-products" y envia solo "/v3/api-docs" al servicio
+
+        - id: openapi-carts
+          uri: lb://CART-SERVICE
+          predicates:
+            - Path=/doc-carts/**
+          filters:
+            - StripPrefix=1
+
+        - id: openapi-sales
+          uri: lb://SALE-SERVICE
+          predicates:
+            - Path=/doc-sales/**
+          filters:
+            - StripPrefix=1
+
+# Configuracion del menu desplegable centralizado en Swagger UI
+springdoc:
+  swagger-ui:
+    urls:
+      - name: API Products (Load Balanced)
+        url: /doc-products/v3/api-docs
+      - name: API Carts
+        url: /doc-carts/v3/api-docs
+      - name: API Sales
+        url: /doc-sales/v3/api-docs
 
 management:
   endpoints:
@@ -40,12 +69,10 @@ management:
   endpoint:
     gateway:
       access: read-only
-
-      # http://localhost:443/actuator/gateway/routes para ver las metricas
+      # http://localhost:443/actuator/gateway/routes para ver las metricas en vivo
 
 # Configuracion de Eureka
 eureka:
   client:
     service-url:
       defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka
-
